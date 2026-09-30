@@ -1,0 +1,68 @@
+# ====================== 全局通用 ======================
+# IDE / Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*.tmp
+.DS_Store
+Thumbs.db
+
+# 环境变量、密钥、本地配置
+.env
+.env.local
+.env.dev
+.env.prod
+*.pem
+*.key
+
+# 日志
+*.log
+logs/
+
+# ====================== Go Gateway (gateway/) ======================
+gateway/bin/
+gateway/pkg/
+gateway/vendor/
+gateway/.env
+gateway/*.log
+# Go编译产物
+*.out
+
+# ====================== Python AI-Service (ai-service/) ======================
+ai-service/venv/
+ai-service/__pycache__/
+ai-service/*.pyc
+ai-service/*.pyo
+ai-service/*.pyd
+ai-service/.pytest_cache/
+ai-service/.mypy_cache/
+ai-service/.env
+ai-service/data/tmp/
+ai-service/models/tmp/
+
+# ====================== Vue Frontend (frontend/) ======================
+frontend/node_modules/
+frontend/dist/
+frontend/.nuxt/
+frontend/.output/
+frontend/.env
+frontend/.env.local
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# ====================== Docker & 持久化数据 ======================
+# 容器本地挂载数据（PG、Redis、Qdrant），不要入库
+docker/qdrant-storage/
+docker/pgdata/
+docker/redis-data/
+
+# docker临时文件
+.dockerignore
+
+# ====================== 文档 & 其他（可选，按需） ======================
+# 本地导出的pdf/word临时文件
+*.docx
+*.pdf
+!docs/**/*.md
