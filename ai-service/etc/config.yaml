@@ -1,0 +1,8 @@
+# MedFollow AI 服务配置（skill 加载）
+skill_root: skills
+redis_url: redis://127.0.0.1:6379/0
+redis_prefix: "medfollow:skill:"
+l1_max_lru_size: 5
+enable_real_time_mtime_check: false
+mtime_check_cooldown_sec: 60
+meta_index_refresh_interval: 120

@@ -44,10 +44,7 @@ class AsyncLRUCache(Generic[T]):
         async with self._lock:
             self._cache.clear()
 
-    @property
-    def size(self) -> int:
-        # 读取size也要上锁，防止并发修改
-        async def _get_size():
-            async with self._lock:
-                return len(self._cache)
-        return asyncio.run(_get_size())
+    async def get_size(self) -> int:
+        async with self._lock:
+            return len(self._cache)
+

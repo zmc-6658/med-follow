@@ -7,7 +7,7 @@
 *.tmp
 .DS_Store
 Thumbs.db
-
+.trae/
 # 环境变量、密钥、本地配置
 .env
 .env.local
@@ -28,6 +28,7 @@ gateway/.env
 gateway/*.log
 # Go编译产物
 *.out
+gateway/go.sum
 
 # ====================== Python AI-Service (ai-service/) ======================
 ai-service/venv/

@@ -1,0 +1,40 @@
+# 网关配置，路径可用环境变量 GATEWAY_CONFIG 覆盖
+server:
+  addr: ":8080"
+  mode: release
+
+jwt:
+  secret: "medfollow-dev-secret-change-me"
+  access_ttl: 2h
+
+defaults:
+  tenant_id: "t001"
+  org_id: "o001"
+
+# 演示账号，用户体系落地后删除
+demo_users:
+  - username: admin
+    password: admin123
+    user_id: "u1001"
+    role: ROLE_ADMIN
+    dept_id: "d000"
+  - username: director
+    password: director123
+    user_id: "u1002"
+    role: ROLE_DIRECTOR
+    dept_id: "d001"
+  - username: doctor
+    password: doctor123
+    user_id: "u1003"
+    role: ROLE_DOCTOR
+    dept_id: "d001"
+  - username: nurse
+    password: nurse123
+    user_id: "u1004"
+    role: ROLE_NURSE
+    dept_id: "d001"
+  - username: auditor
+    password: auditor123
+    user_id: "u1005"
+    role: ROLE_AUDITOR
+    dept_id: "d002"
