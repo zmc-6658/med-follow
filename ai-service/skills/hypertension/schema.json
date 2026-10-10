@@ -1,0 +1,536 @@
+{
+  "disease": "hypertension",
+  "version": "1.2",
+  "description": "高血压患者自助随访字段定义（V1.2 迭代0启动版）",
+  "fields": [
+    {
+      "key": "followup_date",
+      "label": "随访日期",
+      "type": "date",
+      "required": true,
+      "category": "A",
+      "description": "系统当前日期，可手动修改",
+      "source": "system",
+      "ask_order": 0,
+      "ask_question": null,
+      "unit": null,
+      "range": null,
+      "options": null,
+      "trigger_followup": null,
+      "needs_confirm": false
+    },
+    {
+      "key": "height",
+      "label": "身高",
+      "type": "float",
+      "required": false,
+      "category": "A",
+      "description": "来自健康档案，只读展示",
+      "source": "his",
+      "ask_order": null,
+      "ask_question": null,
+      "unit": "cm",
+      "range": [
+        30,
+        250
+      ],
+      "options": null,
+      "trigger_followup": null,
+      "needs_confirm": false
+    },
+    {
+      "key": "weight",
+      "label": "体重",
+      "type": "float",
+      "required": false,
+      "category": "A",
+      "description": "来自健康档案，只读展示",
+      "source": "his",
+      "ask_order": null,
+      "ask_question": null,
+      "unit": "kg",
+      "range": [
+        20,
+        300
+      ],
+      "options": null,
+      "trigger_followup": null,
+      "needs_confirm": false
+    },
+    {
+      "key": "sbp",
+      "label": "收缩压",
+      "type": "integer",
+      "required": true,
+      "category": "B",
+      "description": "收缩压值，患者自报或设备读取",
+      "source": "patient",
+      "ask_order": 2,
+      "ask_question": "您最近测量过血压吗？收缩压（高压）是多少？",
+      "unit": "mmHg",
+      "range": [
+        70,
+        250
+      ],
+      "options": null,
+      "trigger_followup": "only_one_number",
+      "needs_confirm": true
+    },
+    {
+      "key": "dbp",
+      "label": "舒张压",
+      "type": "integer",
+      "required": true,
+      "category": "B",
+      "description": "舒张压值",
+      "source": "patient",
+      "ask_order": 3,
+      "ask_question": "舒张压（低压）是多少？",
+      "unit": "mmHg",
+      "range": [
+        40,
+        150
+      ],
+      "options": null,
+      "trigger_followup": "only_one_number",
+      "needs_confirm": true
+    },
+    {
+      "key": "bp_measure_method",
+      "label": "测量方式",
+      "type": "enum",
+      "required": true,
+      "category": "B",
+      "description": "血压测量来源",
+      "source": "patient",
+      "ask_order": 1,
+      "ask_question": "您这次血压是在哪里测量的？",
+      "unit": null,
+      "range": null,
+      "options": [
+        "自测",
+        "卫生室测",
+        "未测"
+      ],
+      "trigger_followup": "not_measured",
+      "needs_confirm": false
+    },
+    {
+      "key": "symptom",
+      "label": "症状",
+      "type": "multi-select",
+      "required": true,
+      "category": "B",
+      "description": "近期不适症状多选",
+      "source": "patient",
+      "ask_order": 4,
+      "ask_question": "最近有没有头晕、头痛、心慌、胸闷、手脚发麻、下肢水肿等不舒服？",
+      "unit": null,
+      "range": null,
+      "options": [
+        "头痛头晕",
+        "恶心呕吐",
+        "眼花耳鸣",
+        "呼吸困难",
+        "心悸胸闷",
+        "鼻衄",
+        "四肢发麻",
+        "下肢水肿",
+        "其他"
+      ],
+      "trigger_followup": "any_selected",
+      "needs_confirm": true
+    },
+    {
+      "key": "symptom_chest_pain",
+      "label": "胸痛",
+      "type": "boolean",
+      "required": true,
+      "category": "B",
+      "description": "是否有胸痛症状（高危信号）",
+      "source": "patient",
+      "ask_order": 5,
+      "ask_question": "有没有胸口疼或者压迫感？",
+      "unit": null,
+      "range": null,
+      "options": null,
+      "trigger_followup": "true_terminate",
+      "needs_confirm": false
+    },
+    {
+      "key": "medication_adherence",
+      "label": "服药依从性",
+      "type": "enum",
+      "required": true,
+      "category": "B",
+      "description": "降压药服用情况",
+      "source": "patient",
+      "ask_order": 6,
+      "ask_question": "降压药是每天都在按时吃吗？",
+      "unit": null,
+      "range": null,
+      "options": [
+        "规律",
+        "间断",
+        "不服药"
+      ],
+      "trigger_followup": "non_compliant",
+      "needs_confirm": true
+    },
+    {
+      "key": "medication_reason",
+      "label": "不服药原因",
+      "type": "text",
+      "required": false,
+      "category": "B",
+      "description": "间断或不服药时的原因记录",
+      "source": "patient",
+      "ask_order": 7,
+      "ask_question": "请问是因为什么原因忘记吃/不吃药呢？",
+      "unit": null,
+      "range": null,
+      "options": null,
+      "trigger_followup": null,
+      "needs_confirm": false
+    },
+    {
+      "key": "actual_med_vs_order",
+      "label": "实际用药 vs 医嘱",
+      "type": "enum",
+      "required": true,
+      "category": "B",
+      "description": "患者实际用药与医嘱是否一致",
+      "source": "patient",
+      "ask_order": 8,
+      "ask_question": "您现在吃的药和医生之前开的药一样吗？有没有自己加减药或者换药？",
+      "unit": null,
+      "range": null,
+      "options": [
+        "一致",
+        "不一致",
+        "未知"
+      ],
+      "trigger_followup": "inconsistent",
+      "needs_confirm": true
+    },
+    {
+      "key": "adverse_reaction",
+      "label": "药物不良反应",
+      "type": "boolean",
+      "required": true,
+      "category": "B",
+      "description": "是否有药物不良反应",
+      "source": "patient",
+      "ask_order": 9,
+      "ask_question": "吃降压药之后有没有出现干咳、脚踝肿、头晕加重等不舒服？",
+      "unit": null,
+      "range": null,
+      "options": null,
+      "trigger_followup": "true_ask_detail",
+      "needs_confirm": true
+    },
+    {
+      "key": "adverse_reaction_detail",
+      "label": "不良反应详情",
+      "type": "text",
+      "required": false,
+      "category": "B",
+      "description": "不良反应具体表现",
+      "source": "patient",
+      "ask_order": 10,
+      "ask_question": "能具体说说是什么不舒服吗？",
+      "unit": null,
+      "range": null,
+      "options": null,
+      "trigger_followup": null,
+      "needs_confirm": false
+    },
+    {
+      "key": "smoke",
+      "label": "吸烟",
+      "type": "enum",
+      "required": true,
+      "category": "B",
+      "description": "吸烟状况",
+      "source": "patient",
+      "ask_order": 11,
+      "ask_question": "您抽烟吗？",
+      "unit": null,
+      "range": null,
+      "options": [
+        "否",
+        "已戒",
+        "偶尔",
+        "经常"
+      ],
+      "trigger_followup": null,
+      "needs_confirm": false
+    },
+    {
+      "key": "drink",
+      "label": "饮酒",
+      "type": "enum",
+      "required": true,
+      "category": "B",
+      "description": "饮酒状况",
+      "source": "patient",
+      "ask_order": 12,
+      "ask_question": "平时喝酒吗？",
+      "unit": null,
+      "range": null,
+      "options": [
+        "否",
+        "偶尔",
+        "经常"
+      ],
+      "trigger_followup": null,
+      "needs_confirm": false
+    },
+    {
+      "key": "salt",
+      "label": "摄盐情况",
+      "type": "enum",
+      "required": true,
+      "category": "B",
+      "description": "饮食口味",
+      "source": "patient",
+      "ask_order": 13,
+      "ask_question": "平时吃饭口味偏淡还是偏咸？",
+      "unit": null,
+      "range": null,
+      "options": [
+        "清淡",
+        "一般",
+        "偏咸"
+      ],
+      "trigger_followup": null,
+      "needs_confirm": false
+    },
+    {
+      "key": "exercise",
+      "label": "运动",
+      "type": "object",
+      "required": true,
+      "category": "B",
+      "description": "运动情况（天数+时长）",
+      "source": "patient",
+      "ask_order": 14,
+      "ask_question": "每周大概运动几天？每次多长时间？",
+      "unit": null,
+      "range": null,
+      "options": null,
+      "trigger_followup": null,
+      "needs_confirm": false,
+      "sub_fields": [
+        {
+          "key": "exercise_days",
+          "label": "每周运动天数",
+          "type": "integer",
+          "range": [
+            0,
+            7
+          ]
+        },
+        {
+          "key": "exercise_minutes",
+          "label": "每次运动时长",
+          "type": "integer",
+          "unit": "分钟",
+          "range": [
+            0,
+            480
+          ]
+        }
+      ]
+    },
+    {
+      "key": "bmi",
+      "label": "BMI",
+      "type": "float",
+      "required": false,
+      "category": "C",
+      "description": "体重指数 = 体重(kg) / 身高(m)^2，系统自动计算",
+      "source": "calculated",
+      "ask_order": null,
+      "ask_question": null,
+      "unit": "kg/m²",
+      "range": [
+        10,
+        80
+      ],
+      "options": null,
+      "trigger_followup": null,
+      "needs_confirm": false
+    },
+    {
+      "key": "bp_grade",
+      "label": "血压分级",
+      "type": "enum",
+      "required": false,
+      "category": "C",
+      "description": "根据本次血压值自动分级",
+      "source": "calculated",
+      "ask_order": null,
+      "ask_question": null,
+      "unit": null,
+      "range": null,
+      "options": [
+        "正常",
+        "正常高值",
+        "1级高血压",
+        "2级高血压",
+        "3级高血压",
+        "单纯收缩期高血压"
+      ],
+      "trigger_followup": null,
+      "needs_confirm": false
+    },
+    {
+      "key": "followup_class",
+      "label": "本次随访分类",
+      "type": "enum",
+      "required": false,
+      "category": "C",
+      "description": "规则引擎计算得出",
+      "source": "calculated",
+      "ask_order": null,
+      "ask_question": null,
+      "unit": null,
+      "range": null,
+      "options": [
+        "控制满意",
+        "控制不满意",
+        "出现不良反应",
+        "出现并发症"
+      ],
+      "trigger_followup": null,
+      "needs_confirm": false
+    },
+    {
+      "key": "trend_flag",
+      "label": "趋势标记",
+      "type": "enum",
+      "required": false,
+      "category": "C",
+      "description": "近3次同向变化趋势",
+      "source": "calculated",
+      "ask_order": null,
+      "ask_question": null,
+      "unit": null,
+      "range": null,
+      "options": [
+        "稳定",
+        "持续上升",
+        "持续下降",
+        "波动"
+      ],
+      "trigger_followup": null,
+      "needs_confirm": false
+    },
+    {
+      "key": "next_followup_date",
+      "label": "下次随访日期",
+      "type": "date",
+      "required": false,
+      "category": "C",
+      "description": "由规则引擎计算：控制满意→90天后；不满意→14天内；危急→立即",
+      "source": "calculated",
+      "ask_order": null,
+      "ask_question": null,
+      "unit": null,
+      "range": null,
+      "options": null,
+      "trigger_followup": null,
+      "needs_confirm": false
+    },
+    {
+      "key": "completeness_score",
+      "label": "完整度得分",
+      "type": "integer",
+      "required": false,
+      "category": "C",
+      "description": "必填字段填充率 0-100",
+      "source": "calculated",
+      "ask_order": null,
+      "ask_question": null,
+      "unit": null,
+      "range": [
+        0,
+        100
+      ],
+      "options": null,
+      "trigger_followup": null,
+      "needs_confirm": false
+    },
+    {
+      "key": "source",
+      "label": "数据来源",
+      "type": "enum",
+      "required": true,
+      "category": "meta",
+      "description": "数据填报来源",
+      "source": "system",
+      "ask_order": null,
+      "ask_question": null,
+      "unit": null,
+      "range": null,
+      "options": [
+        "self_reported",
+        "proxy_family",
+        "proxy_doctor",
+        "proxy_nurse"
+      ],
+      "trigger_followup": null,
+      "needs_confirm": false
+    },
+    {
+      "key": "proxy",
+      "label": "代填标记",
+      "type": "boolean",
+      "required": true,
+      "category": "meta",
+      "description": "是否代填（非患者本人）",
+      "source": "system",
+      "ask_order": null,
+      "ask_question": null,
+      "unit": null,
+      "range": null,
+      "options": null,
+      "trigger_followup": null,
+      "needs_confirm": false
+    },
+    {
+      "key": "confidence",
+      "label": "置信度",
+      "type": "float",
+      "required": false,
+      "category": "meta",
+      "description": "AI抽取置信度 0.0-1.0",
+      "source": "system",
+      "ask_order": null,
+      "ask_question": null,
+      "unit": null,
+      "range": [
+        0.0,
+        1.0
+      ],
+      "options": null,
+      "trigger_followup": null,
+      "needs_confirm": false
+    }
+  ],
+  "calculation_rules": {
+    "bmi": "weight / (height/100)^2",
+    "bp_grade": "根据sbp/dbp值查表：正常(<140/90)、正常高值(140-159/90-99)、1级(160-179/100-109)、2级(180-189/110-119)、3级(>=180/110)、单纯收缩期(>=140且<90)",
+    "followup_class": "规则引擎计算：控制满意(sbps<140且dbp<90) / 控制不满意 / 出现不良反应 / 出现并发症",
+    "trend_flag": "取近3次sbp值，同向变化>5mmHg标记趋势",
+    "next_followup_date": "控制满意→+90天；控制不满意→+14天；危急→当日",
+    "completeness_score": "已填必填字段数 / 总必填字段数 * 100"
+  },
+  "metadata": {
+    "created_at": "2026-09-28",
+    "updated_at": "2026-09-28",
+    "author": "PM",
+    "version": "1.2"
+  }
+}

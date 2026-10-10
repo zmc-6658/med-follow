@@ -1,0 +1,307 @@
+{
+  "disease": "hypertension",
+  "version": "1.2",
+  "description": "高血压随访校验规则与预警规则（V1.2 迭代0启动版）",
+  "validators": [
+    {
+      "field": "sbp",
+      "type": "range",
+      "range": [
+        70,
+        250
+      ],
+      "required": true,
+      "msg": "收缩压必须在70-250mmHg范围内"
+    },
+    {
+      "field": "dbp",
+      "type": "range",
+      "range": [
+        40,
+        150
+      ],
+      "required": true,
+      "msg": "舒张压必须在40-150mmHg范围内"
+    },
+    {
+      "field": "sbp",
+      "type": "logic",
+      "must_gt": "dbp",
+      "msg": "收缩压应大于舒张压"
+    },
+    {
+      "field": "height",
+      "type": "range",
+      "range": [
+        30,
+        250
+      ],
+      "required": false,
+      "msg": "身高必须在30-250cm范围内"
+    },
+    {
+      "field": "weight",
+      "type": "range",
+      "range": [
+        20,
+        300
+      ],
+      "required": false,
+      "msg": "体重必须在20-300kg范围内"
+    },
+    {
+      "field": "bp_measure_method",
+      "type": "enum",
+      "options": [
+        "自测",
+        "卫生室测",
+        "未测"
+      ],
+      "required": true,
+      "msg": "测量方式必须为：自测/卫生室测/未测"
+    },
+    {
+      "field": "medication_adherence",
+      "type": "enum",
+      "options": [
+        "规律",
+        "间断",
+        "不服药"
+      ],
+      "required": true,
+      "msg": "服药依从性必须为：规律/间断/不服药"
+    },
+    {
+      "field": "medication_reason",
+      "type": "conditional_required",
+      "if": "medication_adherence=in(间断,不服药)",
+      "then_require": "medication_reason",
+      "msg": "间断或不服药时必须记录原因"
+    },
+    {
+      "field": "actual_med_vs_order",
+      "type": "enum",
+      "options": [
+        "一致",
+        "不一致",
+        "未知"
+      ],
+      "required": true,
+      "msg": "用药一致性必须为：一致/不一致/未知"
+    },
+    {
+      "field": "smoke",
+      "type": "enum",
+      "options": [
+        "否",
+        "已戒",
+        "偶尔",
+        "经常"
+      ],
+      "required": true,
+      "msg": "吸烟状况必须为：否/已戒/偶尔/经常"
+    },
+    {
+      "field": "drink",
+      "type": "enum",
+      "options": [
+        "否",
+        "偶尔",
+        "经常"
+      ],
+      "required": true,
+      "msg": "饮酒状况必须为：否/偶尔/经常"
+    },
+    {
+      "field": "salt",
+      "type": "enum",
+      "options": [
+        "清淡",
+        "一般",
+        "偏咸"
+      ],
+      "required": true,
+      "msg": "摄盐情况必须为：清淡/一般/偏咸"
+    },
+    {
+      "field": "exercise",
+      "type": "object_required",
+      "sub_fields": [
+        "exercise_days",
+        "exercise_minutes"
+      ],
+      "required": true,
+      "msg": "运动情况需填写天数和时长"
+    },
+    {
+      "field": "source",
+      "type": "enum",
+      "options": [
+        "self_reported",
+        "proxy_family",
+        "proxy_doctor",
+        "proxy_nurse"
+      ],
+      "required": true,
+      "msg": "数据来源必须指定"
+    },
+    {
+      "field": "proxy",
+      "type": "boolean",
+      "required": true,
+      "msg": "代填标记必须指定"
+    }
+  ],
+  "alerts": [
+    {
+      "id": "RED_001",
+      "level": "red",
+      "name": "高血压急症可疑",
+      "when": "sbp >= 180 OR dbp >= 110",
+      "action": [
+        "notify_doctor_sms",
+        "advise_er",
+        "flag_urgent"
+      ],
+      "message": "收缩压>=180mmHg或舒张压>=110mmHg，符合高血压急症可疑指征，建议立即转诊",
+      "priority": 1
+    },
+    {
+      "id": "RED_002",
+      "level": "red",
+      "name": "胸痛/呼吸困难",
+      "when": "symptom_chest_pain == true OR symptom contains '呼吸困难'",
+      "action": [
+        "terminate_conversation",
+        "notify_doctor_sms",
+        "advise_er",
+        "advise_120"
+      ],
+      "message": "患者主诉胸痛或呼吸困难，立即终止随访对话并建议立即就医",
+      "priority": 1
+    },
+    {
+      "id": "RED_003",
+      "level": "red",
+      "name": "疑似卒中症状",
+      "when": "symptom contains any(['突发口角歪斜', '言语不清', '一侧肢体无力', '意识模糊'])",
+      "action": [
+        "terminate_conversation",
+        "notify_doctor_sms",
+        "advise_er",
+        "advise_120"
+      ],
+      "message": "疑似卒中症状，立即终止随访对话并建议拨打120",
+      "priority": 1
+    },
+    {
+      "id": "YELLOW_001",
+      "level": "yellow",
+      "name": "连续控制不满意",
+      "when": "trend_flag == '持续上升' AND followup_class == '控制不满意'",
+      "action": [
+        "flag_abnormal",
+        "notify_doctor"
+      ],
+      "message": "连续2次随访控制不满意且血压持续上升，需医生评估是否需要调整方案",
+      "priority": 2
+    },
+    {
+      "id": "YELLOW_002",
+      "level": "yellow",
+      "name": "服药依从性差",
+      "when": "medication_adherence == '不服药'",
+      "action": [
+        "flag_abnormal",
+        "notify_doctor"
+      ],
+      "message": "患者不服药，需了解原因并介入干预",
+      "priority": 2
+    },
+    {
+      "id": "YELLOW_003",
+      "level": "yellow",
+      "name": "自行调药",
+      "when": "actual_med_vs_order == '不一致'",
+      "action": [
+        "flag_abnormal",
+        "notify_doctor",
+        "mark_high_risk"
+      ],
+      "message": "患者自行调整用药，存在安全隐患，需医生核实",
+      "priority": 2
+    },
+    {
+      "id": "YELLOW_004",
+      "level": "yellow",
+      "name": "新发并发症症状",
+      "when": "symptom contains any(['下肢水肿', '四肢发麻', '眼花耳鸣']) AND not previously_recorded",
+      "action": [
+        "flag_abnormal",
+        "notify_doctor"
+      ],
+      "message": "出现新发并发症相关症状，需医生评估靶器官损害",
+      "priority": 2
+    },
+    {
+      "id": "GREEN_001",
+      "level": "green",
+      "name": "单项数据缺失",
+      "when": "any_required_field == empty",
+      "action": [
+        "flag_incomplete"
+      ],
+      "message": "存在必填字段未填写，请补充",
+      "priority": 3
+    },
+    {
+      "id": "GREEN_002",
+      "level": "green",
+      "name": "生活方式不良",
+      "when": "salt == '偏咸' OR smoke == '经常' OR drink == '经常'",
+      "action": [
+        "push_health_tip"
+      ],
+      "message": "存在不良生活方式，推送健康建议",
+      "priority": 3
+    },
+    {
+      "id": "GREEN_003",
+      "level": "green",
+      "name": "血压处于正常高值",
+      "when": "sbp in [140,159] AND dbp in [90,99]",
+      "action": [
+        "push_health_tip",
+        "monitor_closely"
+      ],
+      "message": "血压处于正常高值范围，建议加强监测",
+      "priority": 3
+    }
+  ],
+  "termination_rules": [
+    {
+      "condition": "symptom_chest_pain == true",
+      "action": "terminate",
+      "message": "检测到胸痛症状，立即终止随访对话，提示患者尽快就医",
+      "log": true
+    },
+    {
+      "condition": "symptom contains any(['意识模糊', '言语不清', '突发剧烈头痛'])",
+      "action": "terminate",
+      "message": "检测到疑似卒中症状，立即终止随访对话，提示患者尽快就医或拨打120",
+      "log": true
+    },
+    {
+      "condition": "patient_mentions any(['自杀', '不想活', '伤害自己'])",
+      "action": "terminate",
+      "message": "检测到自伤自杀风险表述，立即终止随访对话，转接人工干预",
+      "log": true
+    }
+  ],
+  "metadata": {
+    "created_at": "2026-09-28",
+    "updated_at": "2026-09-28",
+    "author": "PM",
+    "version": "1.2"
+  }
+}

@@ -1,0 +1,217 @@
+# 高血压随访追问策略配置（V1.2 迭代0启动版）
+# Agent 调度器读取此文件决定追问顺序与触发条件
+
+disease: hypertension
+version: "1.2"
+
+# 开场话术
+greeting: "您好，我是您的随访助手。为了更好地了解您的健康状况，我需要问您几个问题，请您如实回答。"
+
+# 追问顺序定义（按 ask_order 排列）
+question_order:
+  - order: 0
+    field: followup_date
+    question: "请问今天是您随访的日期，对吗？"
+    type: system_auto
+    description: "系统自动带出，无需患者回答"
+
+  - order: 1
+    field: bp_measure_method
+    question: "您这次血压是在哪里测量的？"
+    type: enum
+    options:
+      - "自测"
+      - "卫生室测"
+      - "未测"
+    fallback:
+      - "如果您还没量过血压，建议您先去量一下，我等您量好了再问您。"
+      - "没关系，那我先记下来，等您去测量后告诉我结果。"
+    trigger: not_measured
+    description: "先问测量方式，未测则提醒去测"
+
+  - order: 2
+    field: sbp
+    question: "您最近测量过血压吗？收缩压（高压）是多少？"
+    type: integer
+    unit: "mmHg"
+    range:
+      min: 70
+      max: 250
+    fallback:
+      - "您还记得大概是多少吗？比如说一百二、一百三这样的？"
+      - "没关系，那我先记下来，等您量完告诉我。"
+    trigger: only_one_number
+    description: "只报一个数时追问另一个数"
+    needs_confirm: true
+
+  - order: 3
+    field: dbp
+    question: "舒张压（低压）是多少？"
+    type: integer
+    unit: "mmHg"
+    range:
+      min: 40
+      max: 150
+    fallback:
+      - "那舒张压（低压）您还记得吗？"
+      - "如果不确定也没关系，我帮您记上'未测量'。"
+    trigger: only_one_number
+    needs_confirm: true
+    description: "与收缩压配对追问"
+
+  - order: 4
+    field: symptom
+    question: "最近有没有头晕、头痛、心慌、胸闷、手脚发麻、下肢水肿等不舒服？"
+    type: multi-select
+    options:
+      - "头痛头晕"
+      - "恶心呕吐"
+      - "眼花耳鸣"
+      - "呼吸困难"
+      - "心悸胸闷"
+      - "鼻衄"
+      - "四肢发麻"
+      - "下肢水肿"
+      - "其他"
+    followup_if_selected:
+      question: "这些不舒服持续多久了？有没有加重？"
+      type: text
+    trigger: any_selected
+    needs_confirm: true
+    description: "症状多选，选中后追问持续时间和是否加重"
+
+  - order: 5
+    field: symptom_chest_pain
+    question: "有没有胸口疼或者压迫感？"
+    type: boolean
+    trigger: true_terminate
+    description: "胸痛为高危信号，命中则立即终止对话"
+
+  - order: 6
+    field: medication_adherence
+    question: "降压药是每天都在按时吃吗？"
+    type: enum
+    options:
+      - "规律"
+      - "间断"
+      - "不服药"
+    trigger: non_compliant
+    needs_confirm: true
+    description: "服药依从性，不规律时追问原因"
+
+  - order: 7
+    field: medication_reason
+    question: "请问是因为什么原因忘记吃或者不吃药呢？"
+    type: text
+    trigger:
+      condition: "medication_adherence in ['间断', '不服药']"
+      options:
+        - "忘记了"
+        - "费用太高"
+        - "有副作用"
+        - "觉得自己好了"
+        - "买不到药"
+        - "其他"
+    description: "间断/不服药时追问原因"
+
+  - order: 8
+    field: actual_med_vs_order
+    question: "您现在吃的药和医生之前开的药一样吗？有没有自己加减药或者换药？"
+    type: enum
+    options:
+      - "一致"
+      - "不一致"
+      - "未知"
+    trigger: inconsistent
+    needs_confirm: true
+    description: "实际用药与医嘱一致性，不一致则标记高危"
+
+  - order: 9
+    field: adverse_reaction
+    question: "吃降压药之后有没有出现干咳、脚踝肿、头晕加重等不舒服？"
+    type: boolean
+    trigger: true_ask_detail
+    needs_confirm: true
+    description: "药物不良反应，有则追问详情"
+
+  - order: 10
+    field: adverse_reaction_detail
+    question: "能具体说说是什么不舒服吗？"
+    type: text
+    description: "不良反应具体表现"
+
+  - order: 11
+    field: smoke
+    question: "您抽烟吗？"
+    type: enum
+    options:
+      - "否"
+      - "已戒"
+      - "偶尔"
+      - "经常"
+    description: "吸烟状况"
+
+  - order: 12
+    field: drink
+    question: "平时喝酒吗？"
+    type: enum
+    options:
+      - "否"
+      - "偶尔"
+      - "经常"
+    description: "饮酒状况"
+
+  - order: 13
+    field: salt
+    question: "平时吃饭口味偏淡还是偏咸？"
+    type: enum
+    options:
+      - "清淡"
+      - "一般"
+      - "偏咸"
+    description: "饮食口味"
+
+  - order: 14
+    field: exercise
+    sub_fields:
+      - key: exercise_days
+        question: "您每周大概运动几天？"
+        type: integer
+        unit: "天"
+        range:
+          min: 0
+          max: 7
+      - key: exercise_minutes
+        question: "每次运动多长时间？"
+        type: integer
+        unit: "分钟"
+        range:
+          min: 0
+          max: 480
+    description: "运动情况"
+
+# 兜底策略
+fallback_rules:
+  max_retry_per_slot: 2
+  unknown_handling: "记为unknown，不重复追问同一槽位超过2次"
+  off_topic_handling: "换问法重问一次，仍答非所问则记unknown并跳过"
+  silence_handling: "3次无响应则标'失访'入人工队列"
+
+# 结束话术
+closing: "感谢您的配合，以上信息我已经记录好了。请您确认一下是否有需要修改的地方，确认后我就提交给医生查看。"
+
+# 安全终止话术
+termination_message: "检测到您可能存在紧急健康状况，请立即停止操作并拨打120或前往最近的医院急诊科就诊。您的安全是最重要的。"
+
+# 复述确认模板
+confirm_templates:
+  sbp_dbp: "我理解的是：收缩压{sbp}mmHg，舒张压{dbp}mmHg，对吗？"
+  symptom: "我理解的是：您有以下不适——{symptoms}，持续了{duration}，对吗？"
+  medication: "我理解的是：您{adherence}服用降压药，原因是{reason}，对吗？"
+  med_compare: "我理解的是：您目前的用药和医生开的{comparison}，对吗？"
+
+metadata:
+  created_at: "2026-09-28"
+  updated_at: "2026-09-28"
+  author: "PM"
+  version: "1.2"
