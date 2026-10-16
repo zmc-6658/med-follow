@@ -9,10 +9,31 @@ import (
 )
 
 type Config struct {
-	Server    ServerConfig   `yaml:"server"`
-	JWT       JWTConfig      `yaml:"jwt"`
-	Defaults  DefaultsConfig `yaml:"defaults"`
-	DemoUsers []DemoUser     `yaml:"demo_users"`
+	Server   ServerConfig   `yaml:"server"`
+	JWT      JWTConfig      `yaml:"jwt"`
+	Defaults DefaultsConfig `yaml:"defaults"`
+	Database DatabaseConfig `yaml:"database"`
+	Sync     SyncConfig     `yaml:"sync"`
+	DemoUsers []DemoUser    `yaml:"demo_users"`
+}
+
+type DatabaseConfig struct {
+	Host     string `yaml:"host"`
+	Port     string `yaml:"port"`
+	User     string `yaml:"user"`
+	Password string `yaml:"password"`
+	Name     string `yaml:"name"`
+}
+
+type SyncConfig struct {
+	DataDir  string        `yaml:"data_dir"`
+	Interval time.Duration `yaml:"interval"`
+}
+
+// DSN 返回 keyword=value 形式连接串（密码含特殊字符无需转义）
+func (d DatabaseConfig) DSN() string {
+	return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		d.Host, d.Port, d.User, d.Password, d.Name)
 }
 
 type ServerConfig struct {
@@ -56,6 +77,12 @@ func MustLoad() *Config {
 	}
 	if cfg.JWT.Secret == "" || cfg.JWT.AccessTTL <= 0 || cfg.Server.Addr == "" {
 		panic(fmt.Sprintf("config: jwt.secret / jwt.access_ttl / server.addr are required in %s", path))
+	}
+	if cfg.Database.Name == "" {
+		panic(fmt.Sprintf("config: database.* are required in %s", path))
+	}
+	if cfg.Sync.DataDir == "" || cfg.Sync.Interval <= 0 {
+		panic(fmt.Sprintf("config: sync.data_dir / sync.interval are required in %s", path))
 	}
 
 	current = cfg

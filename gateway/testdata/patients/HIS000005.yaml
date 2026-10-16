@@ -1,0 +1,20 @@
+# HIS Mock 种子数据：标准高血压患者
+his_patient_id: 'HIS000005'
+name: 陈志明
+gender: 男
+birth_date: '1970-05-30'
+id_card: '330102197005300055'
+phone: '13544445555'
+phone_alt: ''
+address: '杭州市拱墅区德胜路27号5幢1202室'
+org_name: 朝晖社区卫生服务中心
+dept_name: 慢病管理科
+managing_doctor_name: 李慧
+disease_type: hypertension
+diagnosis_date: '2020-03-15'
+extra_diagnoses: []
+medications:
+  - drug_name: 厄贝沙坦片
+    dosage: 150mg
+    frequency: qd
+update_time: 2026-09-12T08:20:00+08:00

@@ -1,0 +1,23 @@
+# HIS Mock 种子数据：标准高血压患者（老年，长病程）
+his_patient_id: 'HIS000007'
+name: 周德海
+gender: 男
+birth_date: '1954-01-27'
+id_card: '330102195401270077'
+phone: '18666667777'
+phone_alt: ''
+address: '杭州市拱墅区米市巷34号2幢304室'
+org_name: 朝晖社区卫生服务中心
+dept_name: 慢病管理科
+managing_doctor_name: 王芳
+disease_type: hypertension
+diagnosis_date: '2009-05-11'
+extra_diagnoses: []
+medications:
+  - drug_name: 硝苯地平控释片
+    dosage: 30mg
+    frequency: qd
+  - drug_name: 氢氯噻嗪片
+    dosage: 12.5mg
+    frequency: qd
+update_time: 2026-09-21T15:30:00+08:00

@@ -18,6 +18,8 @@
 | V1.0 | 2026-09-28 | PM | MVP评审版：模块优先级修正、待决策默认方案 |
 | V1.1 | 2026-09-28 | PM | 完整方案A定稿（内部流转版） |
 | **V1.2** | **2026-09-28** | **PM** | **迭代0启动版：优先级重排(M7/M9/M10/M11→P0)、新增故障降级策略、新增状态机与测试策略、内嵌字段骨架、待决策全部闭合、里程碑调至13周且观测能力前置、合规条款分层** |
+| V1.2.1 | 2026-10-14 | PM | MVP数据源决策变更：Mock中间库简化为YAML种子数据源（SyncAdapter契约不变），原因见第九章决策1备注 |
+| V1.2.2 | 2026-10-14 | PM | 网关工程结构变更：internal 由 handler/model/service 横切分层改为按域纵切（auth/sync/task + platform/middleware），新增域=新增目录；详见 5.1 网关目录组织 |
 
 ---
 
@@ -170,7 +172,7 @@ AI服务 -> 数据库：ai_raw + human_final + diff_log 三份并存
 
 | 模块 | 优先级 | 说明 |
 |---|---|---|
-| M1 数据同步与任务分发 | **P0（Mock实现）** | HIS适配层接口预留+Mock中间库，不接真实HIS |
+| M1 数据同步与任务分发 | **P0（Mock实现）** | HIS适配层接口预留+YAML种子数据源（V1.2.1），不接真实HIS |
 | M2 触达与身份接入 | **P0（Token鉴权）/ P2（真实短信）** | JWT一次性Token是P0；真实短信服务P2，MVP写sms_log |
 | **M3 AI 智能随访** | **P0** | 核心 |
 | **M4 患者健康档案与随访记录** | **P0** | 核心 |
@@ -268,7 +270,7 @@ AI服务 -> 数据库：ai_raw + human_final + diff_log 三份并存
 
 **M1 数据同步与任务分发**
 
-- 适配层接口 `SyncAdapter` 预留三种实现（中间库视图/HL7-FHIR/直连接口），MVP 用 Mock 中间库。
+- 适配层接口 `SyncAdapter`：MVP 实现 YamlMockAdapter（本地 YAML 种子数据源，见 `gateway/testdata/`）。生产接入时按医院实际对接方式实现新 Adapter，同步管道零改动。
 - 任务生成规则：按病种+周期自动生成（高血压每季度1次、糖尿病每季度1次、老年人每年1次体检+2次服务、精神障碍按稳定性分级2周~3月）。
 - 任务状态见附录C；同步冲突策略：**读以HIS为准，本系统产生的修改不回写覆盖原始档案**。
 - 增量拉取按 update_time，幂等 upsert，记录 last_sync_at 与 sync_log。
@@ -307,6 +309,27 @@ AI服务 -> 数据库：ai_raw + human_final + diff_log 三份并存
 ```
 
 **关键设计**：`core/` 写一次，`skills/` 无限加。新增病种仅需新增目录与配置，Agent 主流程零改动。
+
+**网关目录组织（V1.2.2）**：internal 按业务域纵切，不设全局 handler/model/service/repos/utils 层。每个域一个目录，域内自含 HTTP handler、业务逻辑与 SQL；跨域只允许调用对方导出函数，禁止摸他域内部与 SQL。
+
+```
+gateway/
+├── cmd/service/          # 只做装配：连接池、依赖注入、路由挂载
+├── internal/
+│   ├── auth/             # 认证域
+│   ├── sync/             # 数据同步域（SyncAdapter/YamlMockAdapter/同步管道/调度）
+│   ├── task/             # 随访任务域（按病种+周期生成）
+│   ├── platform/         # 横切基础设施：统一响应/错误码、数据库连接
+│   ├── middleware/       # JWT鉴权、RBAC、UserContext（横切）
+│   ├── route/            # 权限矩阵挂载路由
+│   └── config/
+├── migrations/           # 幂等增量 SQL
+├── etc/config.yaml
+├── testdata/patients/    # YAML Mock 种子数据源
+└── go.mod
+```
+
+扩展约定：新增业务域 = 新增 `internal/<域>/` 目录，cmd/route 做装配；SQL 就近写在域内，不建全局持久层；类型就近放置，被 ≥2 域引用才上浮 platform/middleware。
 
 ### 5.2 大模型应用方式与 Prompt 工程
 
@@ -445,7 +468,7 @@ Go 层手写 MCP Server（JSON-RPC 2.0，优先 stdio 传输），暴露：
 
 | 风险 | 概率 | 应对 |
 |---|---|---|
-| 无真实HIS环境 | 高 | 适配层+Mock中间库，业务链路先行（已采纳为默认方案） |
+| 无真实HIS环境 | 高 | 适配层+YAML种子数据源，业务链路先行（V1.2.1已采纳为默认方案） |
 | 老年患者点击率低 | 高 | 第二联系人手机号 + 降级链 + 大字版 + Token二次下发 |
 | ASR术语错误率高 | 中 | 热词表 + 药物名字典兜底 + 强制人工确认 |
 | 幻觉导致不当建议 | 中 | RAG强约束 + 禁忌清单 + 出处强制 + 输出审核 |
@@ -457,7 +480,7 @@ Go 层手写 MCP Server（JSON-RPC 2.0，优先 stdio 传输），暴露：
 
 | # | 待决策 | **MVP默认方案** |
 |---|---|---|
-| 1 | 真实HIS还是模拟中间库 | **Mock中间库**，适配层接口预留，不接真实HIS |
+| 1 | 真实HIS还是模拟中间库 | **YAML种子数据源（V1.2.1变更）**：MVP数据源为本地YAML文件（YamlMockAdapter），不接真实HIS |
 | 2 | 短信服务商选型 | **Mock短信**，只写 sms_log，不接真实服务商 |
 | 3 | 录音/对话原文保留期 | **默认6个月**（结构化记录长期保留，分层管理），写死配置 |
 | 4 | 红级预警是否短信通知医生 | **是**，Mock日志即可，不产生真实费用 |

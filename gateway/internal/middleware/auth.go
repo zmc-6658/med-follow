@@ -8,7 +8,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 
 	"MedFollow/internal/config"
-	"MedFollow/internal/model"
+	"MedFollow/internal/platform/response"
 )
 
 const userContextKey = "user_context"
@@ -22,12 +22,12 @@ const (
 
 func JWTSecret() []byte { return []byte(config.Get().JWT.Secret) }
 
-func GetUserContext(c *gin.Context) *model.UserContext {
+func GetUserContext(c *gin.Context) *UserContext {
 	uc, ok := c.Get(userContextKey)
 	if !ok {
 		return nil
 	}
-	user, _ := uc.(*model.UserContext)
+	user, _ := uc.(*UserContext)
 	return user
 }
 
@@ -35,12 +35,12 @@ func AuthRequired() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		header := c.GetHeader("Authorization")
 		if header == "" {
-			model.AbortErr(c, 401, errMissingToken, "missing token")
+			response.AbortErr(c, 401, errMissingToken, "missing token")
 			return
 		}
 		parts := strings.SplitN(header, " ", 2)
 		if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") || strings.TrimSpace(parts[1]) == "" {
-			model.AbortErr(c, 401, errMissingToken, "malformed authorization header, expected: Bearer <token>")
+			response.AbortErr(c, 401, errMissingToken, "malformed authorization header, expected: Bearer <token>")
 			return
 		}
 
@@ -53,7 +53,7 @@ func AuthRequired() gin.HandlerFunc {
 		})
 
 		if err != nil || claims.Subject == "" {
-			model.AbortErr(c, 401, errInvalidToken, "invalid or expired token")
+			response.AbortErr(c, 401, errInvalidToken, "invalid or expired token")
 			return
 		}
 
@@ -66,11 +66,11 @@ func RequirePermission(perm string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		uc := GetUserContext(c)
 		if uc == nil {
-			model.AbortErr(c, 401, errMissingToken, "missing token")
+			response.AbortErr(c, 401, errMissingToken, "missing token")
 			return
 		}
 		if !HasPermission(uc.Role, perm) {
-			model.AbortErr(c, 403, errForbidden, "forbidden")
+			response.AbortErr(c, 403, errForbidden, "forbidden")
 			return
 		}
 		c.Next()

@@ -4,8 +4,6 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-
-	"MedFollow/internal/model"
 )
 
 const (
@@ -78,8 +76,8 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-func (c *Claims) ToUserContext() *model.UserContext {
-	return &model.UserContext{
+func (c *Claims) ToUserContext() *UserContext {
+	return &UserContext{
 		UserID:   c.Subject,
 		Username: c.Username,
 		Role:     c.Role,
@@ -90,7 +88,7 @@ func (c *Claims) ToUserContext() *model.UserContext {
 	}
 }
 
-func NewClaims(uc *model.UserContext, ttl time.Duration) *Claims {
+func NewClaims(uc *UserContext, ttl time.Duration) *Claims {
 	now := time.Now()
 	return &Claims{
 		Role:     uc.Role,

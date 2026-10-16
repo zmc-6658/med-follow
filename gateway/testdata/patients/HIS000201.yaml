@@ -1,0 +1,20 @@
+# HIS Mock 种子数据：样本⑥——update_time 靠后，用于测增量拉取
+his_patient_id: 'HIS000201'
+name: 何玉兰
+gender: 女
+birth_date: '1963-09-03'
+id_card: '330102196309030201'
+phone: '13300001111'
+phone_alt: ''
+address: '杭州市拱墅区小河路68号3幢1502室'
+org_name: 朝晖社区卫生服务中心
+dept_name: 慢病管理科
+managing_doctor_name: 李慧
+disease_type: hypertension
+diagnosis_date: '2013-05-28'
+extra_diagnoses: []
+medications:
+  - drug_name: 苯磺酸左氨氯地平片
+    dosage: 2.5mg
+    frequency: qd
+update_time: 2026-10-12T20:15:00+08:00

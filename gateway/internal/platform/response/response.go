@@ -1,4 +1,4 @@
-package model
+package response
 
 import (
 	"net/http"
@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// Response 统一响应结构（横切基础设施，所有域共用）
 type Response struct {
 	Code    int         `json:"code"`
 	Message string      `json:"message"`

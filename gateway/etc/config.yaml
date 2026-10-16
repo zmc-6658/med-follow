@@ -11,6 +11,18 @@ defaults:
   tenant_id: "t001"
   org_id: "o001"
 
+database:
+  host: "localhost"
+  port: "5432"
+  user: "zhong"
+  password: "Zhong@123456"
+  name: "medfollow"
+
+# 患者数据同步：YAML Mock 数据源目录 + 定时增量同步间隔
+sync:
+  data_dir: "testdata/patients"
+  interval: 5m
+
 # 演示账号，用户体系落地后删除
 demo_users:
   - username: admin

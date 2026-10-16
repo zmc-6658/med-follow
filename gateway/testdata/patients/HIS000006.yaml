@@ -1,0 +1,23 @@
+# HIS Mock 种子数据：标准高血压患者（联合用药）
+his_patient_id: 'HIS000006'
+name: 刘桂兰
+gender: 女
+birth_date: '1962-08-09'
+id_card: '330102196208090066'
+phone: '15855556666'
+phone_alt: ''
+address: '杭州市拱墅区祥园路18号3幢701室'
+org_name: 朝晖社区卫生服务中心
+dept_name: 慢病管理科
+managing_doctor_name: 李慧
+disease_type: hypertension
+diagnosis_date: '2016-07-22'
+extra_diagnoses: []
+medications:
+  - drug_name: 苯磺酸氨氯地平片
+    dosage: 5mg
+    frequency: qd
+  - drug_name: 缬沙坦胶囊
+    dosage: 80mg
+    frequency: qd
+update_time: 2026-09-16T11:05:00+08:00

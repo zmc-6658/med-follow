@@ -1,0 +1,25 @@
+# HIS Mock 种子数据：样本⑤——共病患者（高血压 + 糖尿病，本阶段仅生成高血压任务）
+his_patient_id: 'HIS000104'
+name: 郑福生
+gender: 男
+birth_date: '1959-04-22'
+id_card: '330102195904220104'
+phone: '13599990001'
+phone_alt: ''
+address: '杭州市拱墅区和睦路55号2幢1105室'
+org_name: 朝晖社区卫生服务中心
+dept_name: 慢病管理科
+managing_doctor_name: 李慧
+disease_type: hypertension
+diagnosis_date: '2011-10-25'
+extra_diagnoses:
+  - disease_type: diabetes
+    diagnosis_date: '2018-09-20'
+medications:
+  - drug_name: 苯磺酸氨氯地平片
+    dosage: 5mg
+    frequency: qd
+  - drug_name: 盐酸二甲双胍片
+    dosage: 0.5g
+    frequency: bid
+update_time: 2026-09-28T11:00:00+08:00
