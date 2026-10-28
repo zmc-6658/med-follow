@@ -9,12 +9,24 @@ import (
 )
 
 type Config struct {
-	Server   ServerConfig   `yaml:"server"`
-	JWT      JWTConfig      `yaml:"jwt"`
-	Defaults DefaultsConfig `yaml:"defaults"`
-	Database DatabaseConfig `yaml:"database"`
-	Sync     SyncConfig     `yaml:"sync"`
-	DemoUsers []DemoUser    `yaml:"demo_users"`
+	Server    ServerConfig   `yaml:"server"`
+	JWT       JWTConfig      `yaml:"jwt"`
+	Defaults  DefaultsConfig `yaml:"defaults"`
+	Database  DatabaseConfig `yaml:"database"`
+	Sync      SyncConfig     `yaml:"sync"`
+	MCP       MCPConfig      `yaml:"mcp"`
+	DemoUsers []DemoUser     `yaml:"demo_users"`
+}
+
+// MCPConfig MCP Server（stdio）配置：skill 目录 + caller 鉴权白名单
+type MCPConfig struct {
+	SkillsRoot string                  `yaml:"skills_root"`
+	Callers    map[string]CallerConfig `yaml:"callers"`
+}
+
+type CallerConfig struct {
+	Token string   `yaml:"token"`
+	Allow []string `yaml:"allow"`
 }
 
 type DatabaseConfig struct {

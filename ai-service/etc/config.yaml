@@ -6,3 +6,9 @@ l1_max_lru_size: 5
 enable_real_time_mtime_check: false
 mtime_check_cooldown_sec: 60
 meta_index_refresh_interval: 120
+
+# MCP 客户端：asyncio 子进程拉起 Go 网关 MCP Server（JSON-RPC 2.0 over stdio）
+mcp:
+  server_binary: "../gateway/bin/mcpserver"
+  gateway_dir: "../gateway"
+  token: "dev-token-001"

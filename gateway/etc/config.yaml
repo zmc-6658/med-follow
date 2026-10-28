@@ -23,6 +23,16 @@ sync:
   data_dir: "testdata/patients"
   interval: 5m
 
+# MCP Server（JSON-RPC 2.0 over stdio，由 AI 服务以子进程拉起，无 HTTP 端口）
+mcp:
+  # get_skill_config 读取的 skill 目录（每个病种一个子目录：SKILL.md / schema.json / questions.yaml / rules.json）
+  skills_root: "../ai-service/skills"
+  # caller 鉴权与 per-caller 工具白名单（demo 级别：token 明文，仅本机 stdio 子进程通信）
+  callers:
+    ai-service:
+      token: "dev-token-001"
+      allow: [query_patient, list_tasks, query_history_trend, get_skill_config, save_followup, push_alert]
+
 # 演示账号，用户体系落地后删除
 demo_users:
   - username: admin
