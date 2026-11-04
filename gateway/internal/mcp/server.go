@@ -2,6 +2,7 @@ package mcp
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -11,6 +12,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"MedFollow/internal/config"
+	"MedFollow/internal/trace"
 )
 
 // JSON-RPC 2.0 over stdio 的最小 MCP Server：
@@ -127,14 +129,22 @@ func (s *Server) handleToolsCall(params json.RawMessage) *Response {
 			fmt.Sprintf("permission denied: tool %s not allowed for caller %s", p.Name, s.caller))
 	}
 
+	// 工具调用 span（MCP 进程无上游 HTTP ctx，作为独立根 span；输出走 stderr）
+	_, span := trace.StartSpan(context.Background(), trace.SpanMCPToolCall,
+		map[string]any{"tool": p.Name, "caller": s.caller})
+	defer span.End()
+
 	start := time.Now()
 	result, err := s.execTool(p.Name, p.Arguments)
 	duration := time.Since(start)
 	if err != nil {
+		span.SetError(err)
+		span.SetAttrs(map[string]any{"duration": duration})
 		log.Printf("[mcp] caller=%s tool=%s duration=%s error=%v", s.caller, p.Name, duration, err)
 		return &Response{Result: toolErrorResult(err.Error())}
 	}
 	// 每次工具调用留痕：caller + 工具名 + 耗时
+	span.SetAttrs(map[string]any{"duration": duration})
 	log.Printf("[mcp] caller=%s tool=%s duration=%s", s.caller, p.Name, duration)
 	return &Response{Result: toolResult(result)}
 }

@@ -8,19 +8,26 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"MedFollow/internal/trace"
 )
 
 // GenerateTasks 按病种+周期生成随访任务（编排），SQL 在 store.go
 // 生成规则（PRD 4.7 M1）：高血压每季度 1 次；本阶段仅高血压，新增病种时在此扩展
 func GenerateTasks(ctx context.Context, pool *pgxpool.Pool, now time.Time) (period string, created int, err error) {
+	ctx, span := trace.StartSpan(ctx, trace.SpanTaskGenerate)
+	defer span.End()
+
 	period = PeriodKey(now)
 
 	created, err = insertQuarterlyTasks(ctx, pool, period, nextWorkingDay(now).Format("2006-01-02"), strconv.Itoa(now.Year()))
 	if err != nil {
+		span.SetError(err)
 		return period, 0, err
 	}
 
 	if err = promoteDueScheduled(ctx, pool); err != nil {
+		span.SetError(err)
 		return period, created, err
 	}
 

@@ -15,7 +15,14 @@ type Config struct {
 	Database  DatabaseConfig `yaml:"database"`
 	Sync      SyncConfig     `yaml:"sync"`
 	MCP       MCPConfig      `yaml:"mcp"`
+	Trace     TraceConfig    `yaml:"trace"`
 	DemoUsers []DemoUser     `yaml:"demo_users"`
+}
+
+// TraceConfig 可观测配置（PRD 5.7 V1.2.3）。OtlpEndpoint 为 P2 预留：
+// 届时填 LangFuse 的 OTLP 地址；为空则 trace 仅输出 JSON lines 到本地 stdout（MCP 进程为 stderr）
+type TraceConfig struct {
+	OtlpEndpoint string `yaml:"otlp_endpoint"`
 }
 
 // MCPConfig MCP Server（stdio）配置：skill 目录 + caller 鉴权白名单

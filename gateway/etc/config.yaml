@@ -33,6 +33,11 @@ mcp:
       token: "dev-token-001"
       allow: [query_patient, list_tasks, query_history_trend, get_skill_config, save_followup, push_alert]
 
+# 可观测：基于 OTel SDK 手工埋点（PRD 5.7 V1.2.3），dev 阶段 JSON lines 输出到本地
+# otlp_endpoint 为 P2 预留：填 LangFuse 的 OTLP 地址后走 OTLP 导出；为空则仅 stdout（MCP 进程为 stderr）
+trace:
+  otlp_endpoint: ""
+
 # 演示账号，用户体系落地后删除
 demo_users:
   - username: admin

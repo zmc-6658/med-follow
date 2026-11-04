@@ -78,6 +78,13 @@ class MCPClient:
         if self._proc is None:
             return
         proc, self._proc = self._proc, None
+        # 先关 stdin 让 server 走 EOF 正常退出（defer 中冲刷 trace span），而非等超时被 kill
+        if proc.stdin is not None:
+            try:
+                await proc.stdin.drain()
+                proc.stdin.close()
+            except (BrokenPipeError, ConnectionResetError):
+                pass
         try:
             await asyncio.wait_for(proc.wait(), timeout=3)
         except asyncio.TimeoutError:

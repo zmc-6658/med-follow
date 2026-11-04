@@ -1,6 +1,7 @@
 package sync
 
 import (
+	"MedFollow/internal/trace"
 	"context"
 	"crypto/rand"
 	"encoding/hex"
@@ -42,23 +43,36 @@ func newBatchID() string {
 	return time.Now().Format("20060102150405") + "-" + hex.EncodeToString(b)
 }
 
-func (s *Syncer) Run(ctx context.Context) (*SyncResult, error) {
-	res := &SyncResult{BatchID: newBatchID()}
+func (s *Syncer) Run(ctx context.Context) (res *SyncResult, err error) {
+	ctx, span := trace.StartSpan(ctx, trace.SpanSyncRun)
+	defer span.End()
+
+	res = &SyncResult{BatchID: newBatchID()}
+	// sync_failed 埋点（PRD 第七章）：任一环节失败即记录，batch_id 哈希
+	defer func() {
+		if err != nil {
+			trace.EmitEvent(ctx, trace.EventSyncFailed, map[string]any{
+				"batch_id": trace.HashID(res.BatchID),
+				"error":    err.Error(),
+			})
+			span.SetError(err)
+		}
+	}()
 
 	lastSync, err := loadLastSync(ctx, s.pool)
 	if err != nil {
-		return nil, fmt.Errorf("read sync_state: %w", err)
+		return res, fmt.Errorf("read sync_state: %w", err)
 	}
 
 	patients, err := s.adapter.FetchSince(ctx, lastSync)
 	if err != nil {
-		return nil, fmt.Errorf("fetch from adapter: %w", err)
+		return res, fmt.Errorf("fetch from adapter: %w", err)
 	}
 	res.Fetched = len(patients)
 
 	logID, err := insertSyncLog(ctx, s.pool, res.BatchID, res.Fetched)
 	if err != nil {
-		return nil, fmt.Errorf("insert sync_log: %w", err)
+		return res, fmt.Errorf("insert sync_log: %w", err)
 	}
 
 	var maxUpdate time.Time
@@ -93,12 +107,12 @@ func (s *Syncer) Run(ctx context.Context) (*SyncResult, error) {
 	// 水位只前进不后退：取本批已同步记录的 max(update_time)
 	if maxUpdate.After(lastSync) {
 		if err := saveLastSync(ctx, s.pool, maxUpdate); err != nil {
-			return nil, fmt.Errorf("update sync_state: %w", err)
+			return res, fmt.Errorf("update sync_state: %w", err)
 		}
 	}
 
 	if err := finishSyncLog(ctx, s.pool, logID, res); err != nil {
-		return nil, fmt.Errorf("update sync_log: %w", err)
+		return res, fmt.Errorf("update sync_log: %w", err)
 	}
 
 	log.Printf("[sync] batch=%s fetched=%d inserted=%d updated=%d skipped=%d",

@@ -10,10 +10,17 @@ import (
 	"MedFollow/internal/config"
 	"MedFollow/internal/route"
 	"MedFollow/internal/sync"
+	"MedFollow/internal/trace"
 )
 
 func main() {
 	cfg := config.MustLoad()
+
+	shutdownTrace := trace.Init(trace.Config{
+		ServiceName:  "medfollow-gateway",
+		OTLPEndpoint: cfg.Trace.OtlpEndpoint,
+	})
+	defer func() { _ = shutdownTrace(context.Background()) }()
 
 	if cfg.Server.Mode != "" {
 		gin.SetMode(cfg.Server.Mode)
@@ -29,6 +36,7 @@ func main() {
 	go sync.RunScheduler(context.Background(), syncer, pool, cfg.Sync.Interval)
 
 	r := gin.Default()
+	r.Use(trace.Middleware())
 	route.Setup(r, syncer, pool)
 
 	log.Printf("[gateway] listening on %s", cfg.Server.Addr)
