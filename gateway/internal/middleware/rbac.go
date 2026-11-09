@@ -18,6 +18,7 @@ const (
 const (
 	PermTaskView    = "task:view"     // 查看随访任务
 	PermTaskWrite   = "task:write"    // 开始/完成随访、表单编辑
+	PermSmsSend     = "sms:send"      // 下发随访短信
 	PermPatientView = "patient:view"  // 查看患者档案
 	PermRecordView  = "record:view"   // 查看随访记录
 	PermHISSubmit   = "his:submit"    // 提交随访至 HIS
@@ -32,7 +33,7 @@ const (
 
 // 角色权限表，含继承展开（DIRECTOR→DOCTOR，AUDITOR→DIRECTOR，PRD 10.2）
 var rolePermissions = map[string][]string{
-	RoleDoctor: {PermTaskView, PermTaskWrite, PermPatientView, PermRecordView, PermHISSubmit, PermAlertHandle},
+	RoleDoctor: {PermTaskView, PermTaskWrite, PermSmsSend, PermPatientView, PermRecordView, PermHISSubmit, PermAlertHandle},
 	RoleNurse:  {PermTaskView, PermTaskWrite, PermPatientView, PermRecordView, PermHISSubmit, PermAlertHandle},
 	RoleAdmin:  {PermSysConfig, PermUserManage, PermAuditView},
 }
@@ -67,12 +68,14 @@ func HasPermission(role, perm string) bool {
 }
 
 // Claims JWT 载荷（PRD 10.5.2：sub/role/tenant_id/org_id/dept_id/exp/jti）
+// Typ 为空表示登录 Token；非空（如 sms_click）为患者端一次性 Token，登录侧直接拒绝
 type Claims struct {
 	Role     string `json:"role"`
 	Username string `json:"username"`
 	TenantID string `json:"tenant_id"`
 	OrgID    string `json:"org_id"`
 	DeptID   string `json:"dept_id"`
+	Typ      string `json:"typ,omitempty"`
 	jwt.RegisteredClaims
 }
 

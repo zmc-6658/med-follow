@@ -52,7 +52,7 @@ func AuthRequired() gin.HandlerFunc {
 			return JWTSecret(), nil
 		})
 
-		if err != nil || claims.Subject == "" {
+		if err != nil || claims.Subject == "" || claims.Typ != "" {
 			response.AbortErr(c, 401, errInvalidToken, "invalid or expired token")
 			return
 		}

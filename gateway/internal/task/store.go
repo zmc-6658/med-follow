@@ -2,6 +2,7 @@ package task
 
 import (
 	"context"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -46,4 +47,56 @@ func promoteDueScheduled(ctx context.Context, pool *pgxpool.Pool) error {
 		`UPDATE followup_tasks SET status = 'scheduled'
 		 WHERE status = 'created' AND plan_date <= current_date`)
 	return err
+}
+
+// expireStaleTasks 惰性降级（不写定时器，任务列表查询时顺带执行）：
+// sms_sent 且无任何点击超 72h → 置 lost（终态），返回推进条数
+func expireStaleTasks(ctx context.Context, pool *pgxpool.Pool) (int64, error) {
+	tag, err := pool.Exec(ctx, `
+		UPDATE followup_tasks SET status = 'lost', lost_reason = 'sent后72h未点击失访', updated_at = now()
+		WHERE status = 'sms_sent' AND sent_at < now() - interval '72 hours'
+		  AND NOT EXISTS (SELECT 1 FROM sms_logs l WHERE l.task_id = followup_tasks.task_id AND l.clicked)`)
+	if err != nil {
+		return 0, err
+	}
+	return tag.RowsAffected(), nil
+}
+
+// TaskListItem 任务列表行
+type TaskListItem struct {
+	TaskID      string     `json:"task_id"`
+	PatientID   string     `json:"patient_id"`
+	PatientName string     `json:"patient_name"`
+	DiseaseType string     `json:"disease_type"`
+	Status      string     `json:"status"`
+	PlanDate    string     `json:"plan_date"`
+	SentAt      *time.Time `json:"sent_at"`
+	CanRemind   bool       `json:"can_remind"` // sms_sent 超 24h 未点击，可向联系人二次提醒
+}
+
+// listTasks 全量任务列表（MVP 不分页，数据量为季度任务数）
+func listTasks(ctx context.Context, pool *pgxpool.Pool) ([]TaskListItem, error) {
+	rows, err := pool.Query(ctx, `
+		SELECT t.task_id, p.patient_id, COALESCE(p.name_display, p.name), t.disease_type, t.status,
+		       t.plan_date::text, t.sent_at,
+		       t.status = 'sms_sent' AND t.sent_at < now() - interval '24 hours'
+		         AND NOT EXISTS (SELECT 1 FROM sms_logs l
+		                         WHERE l.task_id = t.task_id AND l.clicked) AS can_remind
+		FROM followup_tasks t JOIN patients p ON p.id = t.patient_id
+		ORDER BY t.created_at DESC`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	items := []TaskListItem{}
+	for rows.Next() {
+		var it TaskListItem
+		if err := rows.Scan(&it.TaskID, &it.PatientID, &it.PatientName, &it.DiseaseType,
+			&it.Status, &it.PlanDate, &it.SentAt, &it.CanRemind); err != nil {
+			return nil, err
+		}
+		items = append(items, it)
+	}
+	return items, rows.Err()
 }

@@ -33,6 +33,14 @@ mcp:
       token: "dev-token-001"
       allow: [query_patient, list_tasks, query_history_trend, get_skill_config, save_followup, push_alert]
 
+# Mock 短信（MVP 只写 sms_logs 不接服务商，P2 换实现只改 internal/sms 包）：
+# base_url 为短链基底；templates 即模板白名单，键为模板 ID，值支持 {{var}} 变量占位
+sms:
+  base_url: "http://localhost:8080"
+  templates:
+    pt_followup: "【随访提醒】{{name}}您好，请点击链接完成高血压随访：{{link}}"
+    pt_contact_reminder: "【随访提醒】您的家人 {{name}} 的高血压随访待完成，请协助提醒其打开链接：{{link}}"
+
 # 可观测：基于 OTel SDK 手工埋点（PRD 5.7 V1.2.3），dev 阶段 JSON lines 输出到本地
 # otlp_endpoint 为 P2 预留：填 LangFuse 的 OTLP 地址后走 OTLP 导出；为空则仅 stdout（MCP 进程为 stderr）
 trace:

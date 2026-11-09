@@ -15,6 +15,7 @@ type Config struct {
 	Database  DatabaseConfig `yaml:"database"`
 	Sync      SyncConfig     `yaml:"sync"`
 	MCP       MCPConfig      `yaml:"mcp"`
+	SMS       SMSConfig      `yaml:"sms"`
 	Trace     TraceConfig    `yaml:"trace"`
 	DemoUsers []DemoUser     `yaml:"demo_users"`
 }
@@ -42,6 +43,13 @@ type DatabaseConfig struct {
 	User     string `yaml:"user"`
 	Password string `yaml:"password"`
 	Name     string `yaml:"name"`
+}
+
+// SMSConfig Mock 短信（MVP 只写 sms_logs 不接服务商）：短链基底 + 模板白名单，
+// 模板 ID 不在白名单直接拒绝，禁止 fallback 到通用模板（沿用 MCP callers 白名单先例）
+type SMSConfig struct {
+	BaseURL   string            `yaml:"base_url"`
+	Templates map[string]string `yaml:"templates"`
 }
 
 type SyncConfig struct {
