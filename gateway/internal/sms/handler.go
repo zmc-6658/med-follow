@@ -140,6 +140,15 @@ func Dispatch(pool *pgxpool.Pool) gin.HandlerFunc {
 		results = append(results, patient)
 		patientSent := patient.Status == "sent"
 
+		if patientSent {
+			// 最新短信为准：作废此前未点击的旧链接（已点击的保留幂等重开）；
+			// 必须在联系人发送前执行，避免把联系人新行一并作废
+			if err = revokeUnclickedLinks(ctx, pool, taskID, patient.LogID); err != nil {
+				response.AbortErr(c, 500, 50002, "revoke stale links failed")
+				return
+			}
+		}
+
 		if remindAlt {
 			altToken, err := SignClickToken(taskID, t.PatientID)
 			if err != nil {

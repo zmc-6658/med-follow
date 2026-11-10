@@ -34,6 +34,16 @@ func markClicked(ctx context.Context, pool *pgxpool.Pool, token string) (bool, e
 	return tag.RowsAffected() > 0, nil
 }
 
+// revokeUnclickedLinks 二次下发时作废该任务此前未点击的短链（最新短信为准）：
+// 清空 short_link 后 sentLogExists 匹配不到，旧 Token 自然失效；
+// keepLogID 为本次新落的行；已点击的旧行保留，供误关页面后幂等重开
+func revokeUnclickedLinks(ctx context.Context, pool *pgxpool.Pool, taskID, keepLogID string) error {
+	_, err := pool.Exec(ctx,
+		`UPDATE sms_logs SET short_link='' WHERE task_id=$1 AND clicked=false AND status='sent' AND id<>$2`,
+		taskID, keepLogID)
+	return err
+}
+
 // sentLogExists 判断 Token 是否对应一条已投递的短信日志（幂等重开的准入校验）
 func sentLogExists(ctx context.Context, pool *pgxpool.Pool, token string) (bool, error) {
 	var n int
